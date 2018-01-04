@@ -26,7 +26,6 @@
     "chai-as-promised": "^5.0.0",
     "ember-cli": "1.13.1",
     "ember-cli-app-version": "0.4.0",
-    "ember-cli-babel": "^6.7.1",
     "ember-cli-content-security-policy": "0.4.0",
     "ember-cli-dependency-checker": "^1.0.0",
     "ember-cli-htmlbars": "0.7.9",
@@ -49,6 +48,7 @@
   ],
   "dependencies": {
     "ember-cli-deploy-plugin": "^0.2.9",
+    "ember-cli-babel": "^6.7.1",
     "glob": "^5.0.14",
     "is-gzip": "^2.0.0",
     "request-promise": "^0.4.3",
