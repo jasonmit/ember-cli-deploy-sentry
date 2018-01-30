@@ -38,7 +38,7 @@ module.exports = {
       defaultConfig: {
         filePattern: '/**/*.{js,map}',
         enableRevisionTagging: true,
-        replaceFiles: true,
+        replaceFiles: false,
         strictSSL: true,
         distDir(context) {
           return context.distDir;
@@ -137,7 +137,7 @@ module.exports = {
         };
 
         return this.doesReleaseExist(this.releaseUrl)
-          .then(() => this.handleExistingRelease())
+          .then(response => this.handleExistingRelease(response))
           .then(() => rezip())
           .catch(err => this.createRelease(err).then(() => rezip()));
       },
@@ -152,7 +152,9 @@ module.exports = {
       },
 
       doesReleaseExist(releaseUrl) {
-        this.log('Checking is release exists within Sentry.', { verbose: true });
+        this.log('Checking is release exists within Sentry.', {
+          verbose: true
+        });
 
         return request({
           uri: releaseUrl,
