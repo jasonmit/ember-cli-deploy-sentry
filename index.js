@@ -39,8 +39,6 @@ module.exports = {
         filePattern: '/**/*.{js,map}',
         enableRevisionTagging: true,
         replaceFiles: true,
-        enableRevisionTagging: true,
-        replaceFiles: true,
         strictSSL: true,
         distDir(context) {
           return context.distDir;
@@ -59,7 +57,9 @@ module.exports = {
 
         let revisionKey = this.readConfig('revisionKey');
         if (!revisionKey) {
-          return new SilentError('Could not find revision key to fingerprint Sentry revision with.');
+          return new SilentError(
+            'Could not find revision key to fingerprint Sentry revision with.'
+          );
         }
 
         // TODO instead of plainly reading index.html, minimatch
@@ -116,7 +116,11 @@ module.exports = {
           '/releases/'
         );
 
-        this.releaseUrl = urljoin(this.baseUrl, this.sentrySettings.release, '/');
+        this.releaseUrl = urljoin(
+          this.baseUrl,
+          this.sentrySettings.release,
+          '/'
+        );
 
         if (!this.sentrySettings.release) {
           throw new SilentError(
@@ -148,6 +152,8 @@ module.exports = {
       },
 
       doesReleaseExist(releaseUrl) {
+        this.log('Checking is release exists within Sentry.', { verbose: true });
+
         return request({
           uri: releaseUrl,
           auth: this.generateAuth(),
@@ -159,20 +165,20 @@ module.exports = {
       handleExistingRelease(response) {
         this.log('Release ' + response.version + ' exists.', { verbose: true });
         this.log('Retrieving release files.', { verbose: true });
-        return this._getReleaseFiles().then(
-          function(response) {
-            if (this.readConfig('replaceFiles')) {
-              this.log('Replacing files.', { verbose: true });
-              return RSVP.all(response.map(this._deleteFile, this))
-                .then(this._doUpload.bind(this))
-                .then(this._logFiles.bind(this, response));
-            } else {
-              this.log('Leaving files alone.', { verbose: true });
-              return this._logFiles(response);
-            }
-          }.bind(this)
-        );
+
+        return this._getReleaseFiles().then(response => {
+          if (this.readConfig('replaceFiles')) {
+            this.log('Replacing files.', { verbose: true });
+            return RSVP.all(response.map(this._deleteFile, this))
+              .then(this._doUpload.bind(this))
+              .then(this._logFiles.bind(this, response));
+          } else {
+            this.log('Leaving files alone.', { verbose: true });
+            return this._logFiles(response);
+          }
+        });
       },
+
       createRelease(error) {
         if (error.statusCode === 404) {
           this.log('Release does not exist. Creating.', { verbose: true });
@@ -190,7 +196,7 @@ module.exports = {
             version: this.sentrySettings.release
           },
           resolveWithFullResponse: true,
-          strictSSL: this.readConfig('strictSSL'),
+          strictSSL: this.readConfig('strictSSL')
         })
           .then(this._doUpload.bind(this))
           .then(this._logFiles.bind(this))
@@ -199,9 +205,11 @@ module.exports = {
             throw new SilentError('Creating release failed');
           });
       },
+
       _doUpload() {
         return this._getFilesToUpload().then(this._uploadFileList.bind(this));
       },
+
       _getFilesToUpload() {
         this.log('Generating file list for upload', { verbose: true });
         let dir = this.readConfig('distDir');
@@ -222,10 +230,14 @@ module.exports = {
           });
         });
       },
+
       _uploadFileList(files) {
         this.log('Beginning upload.', { verbose: true });
-        return RSVP.all(files.map(throat(5, this._uploadFile.bind(this)))).then(this._getReleaseFiles.bind(this));
+        return RSVP.all(files.map(throat(5, this._uploadFile.bind(this)))).then(
+          this._getReleaseFiles.bind(this)
+        );
       },
+
       _uploadFile(filePath) {
         let distDir = this.readConfig('distDir');
         let fileName = path.join(distDir, filePath);
@@ -240,17 +252,19 @@ module.exports = {
           method: 'POST',
           auth: this.generateAuth(),
           formData: formData,
-          strictSSL: this.readConfig('strictSSL'),
+          strictSSL: this.readConfig('strictSSL')
         });
       },
+
       _getReleaseFiles() {
         return request({
           uri: urljoin(this.releaseUrl, 'files/'),
           auth: this.generateAuth(),
           json: true,
-          strictSSL: this.readConfig('strictSSL'),
+          strictSSL: this.readConfig('strictSSL')
         });
       },
+
       _deleteFile(file) {
         this.log('Deleting ' + file.name, { verbose: true });
         return request({
@@ -260,9 +274,12 @@ module.exports = {
           strictSSL: this.readConfig('strictSSL')
         });
       },
+
       _logFiles(response) {
         this.log('Files known to sentry for this release', { verbose: true });
-        response.forEach(file => this.log('✔  ' + file.name, { verbose: true }));
+        response.forEach(file =>
+          this.log('✔  ' + file.name, { verbose: true })
+        );
       },
 
       didDeploy(/* context */) {
@@ -280,6 +297,7 @@ module.exports = {
         this.log(deployMessage);
       }
     });
+
     return new DeployPlugin();
   }
 };
